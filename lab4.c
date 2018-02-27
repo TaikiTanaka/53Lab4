@@ -10,6 +10,7 @@
 
 //FOR DEBUG
 #define debug_printInput 0
+#define HEAP_SIZE 127
 
 #define maxLineLength 40
 void getInput(void);
@@ -20,7 +21,9 @@ void writeHeap(int writeBlock, char writeChar, int numCopies);
 void printHeap(int blockNum, int numBytes);
 void printHeader(int headerNum);
 void mallocTest();
-
+void set_block_size(int n, char * p);
+int get_block_size(char * p);
+void addblock(char * p, int len);
 int main(int argc, const char * argv[])
 {
 	getInput();
@@ -30,7 +33,7 @@ int main(int argc, const char * argv[])
 void getInput(void)
 {
     int blockCounter = 0;
-    char * heap = (char *) malloc(127);
+    char * heap = (char *) malloc(HEAP_SIZE);
     if(heap == NULL)
     {
         perror("malloc error");
@@ -106,11 +109,37 @@ void getInput(void)
 	free(heap);
 }
 
-int allocate(int numBytes){
+int allocate(int numBytes)
+{
     //First look for the first available block
-    //Then run the allocation algorithm
-    return 0;
+    char* iterator;
+    int i = 0;
+    while(((i<HEAP_SIZE) && (*iterator & 1)) || *iterator <= numBytes + 2)
+    {
+        iterator = iterator + (*iterator & -2);
+        i++;
     }
+
+    //Then run the allocation algorithm
+    addblock(iterator,numBytes);
+    return 0;
+}
+
+void addblock(char* p, int len) {
+    int newsize = ((len + 1) >> 1) << 1; // round up to even
+    int oldsize = *p & -2; // mask out low bit
+    *p = newsize | 1; // set new length
+    if (newsize < oldsize)
+    *(p+newsize) = oldsize - newsize; // set length in remaining
+}
+
+int get_block_size(char * p){
+    return (int) ((unsigned char)*p >> 1);
+}
+void set_block_size(int n, char * p){
+    *p = (((char) n << 1) || (*p & 0x1));
+}
+
 int freeBlock(int block){return 0;}
 void blocklist(){}
 void writeHeap(int writeBlock, char writeChar, int numCopies){}
