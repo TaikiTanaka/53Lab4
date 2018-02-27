@@ -19,6 +19,7 @@ void blocklist();
 void writeHeap(int writeBlock, char writeChar, int numCopies);
 void printHeap(int blockNum, int numBytes);
 void printHeader(int headerNum);
+void mallocTest();
 
 int main(int argc, const char * argv[])
 {
@@ -28,6 +29,13 @@ int main(int argc, const char * argv[])
 
 void getInput(void)
 {
+    int blockCounter = 0;
+    char * heap = (char *) malloc(127);
+    if(heap == NULL)
+    {
+        perror("malloc error");
+        exit(0);
+    }
 	char input[maxLineLength]="";
 	char cmd[20] = "";
 	int num1=-1;
@@ -39,6 +47,7 @@ void getInput(void)
 
 	while( (strcmp(cmd, "quit")) )
 	{
+	    printf("> ");
 		i=0;
 		if( fgets (input, maxLineLength, stdin)!=NULL )
 		{
@@ -94,9 +103,14 @@ void getInput(void)
 		    printHeader(0);
 		}
 	}
+	free(heap);
 }
 
-int allocate(int numBytes){return 0;}
+int allocate(int numBytes){
+    //First look for the first available block
+    //Then run the allocation algorithm
+    return 0;
+    }
 int freeBlock(int block){return 0;}
 void blocklist(){}
 void writeHeap(int writeBlock, char writeChar, int numCopies){}
