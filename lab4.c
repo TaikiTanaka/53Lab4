@@ -20,10 +20,17 @@ void blocklist();
 void writeHeap(int writeBlock, char writeChar, int numCopies);
 void printHeap(int blockNum, int numBytes);
 void printHeader(int headerNum);
-void mallocTest();
 void set_block_size(int n, char * p);
 int get_block_size(char * p);
 void addblock(char * p, int len);
+int getBlockSize(char * p);
+void setBlockSize(int n, char * p);
+void setBlockNum(int n, char * p);
+int getBlockNum(char * p);
+int check_allocated(char * p);
+void setAllocated(char * p);
+void resetAllocated(char * p);
+
 int main(int argc, const char * argv[])
 {
 	getInput();
@@ -133,11 +140,32 @@ void addblock(char* p, int len) {
     *(p+newsize) = oldsize - newsize; // set length in remaining
 }
 
-int get_block_size(char * p){
+//Block helper functions
+int getBlockSize(char * p){
     return (int) ((unsigned char)*p >> 1);
 }
-void set_block_size(int n, char * p){
+void setBlockSize(int n, char * p){
     *p = (((char) n << 1) || (*p & 0x1));
+}
+
+void setBlockNum(int n, char * p){
+*p = (char) n;
+}
+
+int getBlockNum(char * p){
+return (int) *p;
+}
+
+//Allocation functions
+int check_allocated(char * p){
+return (int) (*p & 0x1);
+}
+
+void setAllocated(char * p){
+*p = (*p | 0x1);
+}
+void resetAllocated(char * p){
+*p = (*p & 0xFE);
 }
 
 int freeBlock(int block){return 0;}
