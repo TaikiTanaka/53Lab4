@@ -16,7 +16,7 @@
 void getInput(void);
 int allocate(int numBytes);
 int freeBlock(int block);
-void blocklist();
+void blocklist(void);
 void writeHeap(int writeBlock, char writeChar, int numCopies);
 void printHeap(int blockNum, int numBytes);
 void printHeader(int headerNum);
@@ -25,22 +25,27 @@ int get_block_size(char * p);
 void addblock(char * p, int len);
 int getBlockSize(char * p);
 void setBlockSize(int n, char * p);
-void setBlockNum(int n, char * p);
+void setBlockNum(char * p);
 int getBlockNum(char * p);
 int check_allocated(char * p);
 void setAllocated(char * p);
 void resetAllocated(char * p);
+char * findAvailableBlock(int numBytes);
+
+static int blockCounter = 0;
+static char * heap;
 
 int main(int argc, const char * argv[])
 {
+    heap = (char *) malloc(HEAP_SIZE);
+    setBlockNum(heap+1);
+    setBlockSize(HEAP_SIZE, heap);
 	getInput();
 	return 0;
 }
 
 void getInput(void)
 {
-    int blockCounter = 0;
-    char * heap = (char *) malloc(HEAP_SIZE);
     if(heap == NULL)
     {
         perror("malloc error");
@@ -118,26 +123,32 @@ void getInput(void)
 
 int allocate(int numBytes)
 {
-    //First look for the first available block
-    char* iterator;
-    int i = 0;
-    while(((i<HEAP_SIZE) && (*iterator & 1)) || *iterator <= numBytes + 2)
-    {
-        iterator = iterator + (*iterator & -2);
-        i++;
-    }
-
-    //Then run the allocation algorithm
-    addblock(iterator,numBytes);
+    //First look for the first available block with enough space
+    char * p = findAvailableBlock(numBytes);
+    //p now points to the first block of
+    //Now allocate the memory
+    addblock(p,numBytes);
     return 0;
 }
 
-void addblock(char* p, int len) {
-    int newsize = ((len + 1) >> 1) << 1; // round up to even
-    int oldsize = *p & -2; // mask out low bit
-    *p = newsize | 1; // set new length
-    if (newsize < oldsize)
-    *(p+newsize) = oldsize - newsize; // set length in remaining
+char * findAvailableBlock(int numBytes)
+{
+    char* iterator = heap;
+    while(((iterator < heap + 127) && check_allocated(iterator + 1)) || getBlockSize(iterator) < numBytes + 2)
+    {
+        iterator = iterator + *iterator;
+    }
+    return iterator;
+}
+
+void addblock(char* p, int numBytes) {
+    //Need to implement the splitting logic+++
+    int newsize = numBytes; // the size of the allocated block
+    int oldsize = *p; // block size stored in p
+    *p = newsize; // set new length
+    if(oldsize - newsize > 2)
+        *(p+newsize+2) = oldsize - newsize; // writes in the size information for the next block
+    setBlockNum(p+1);
 }
 
 //Block helper functions
@@ -145,34 +156,44 @@ int getBlockSize(char * p){
     return (int) ((unsigned char)*p >> 1);
 }
 void setBlockSize(int n, char * p){
-    *p = (((char) n << 1) || (*p & 0x1));
+    *p = n;
 }
 
-void setBlockNum(int n, char * p){
-*p = (char) n;
+void setBlockNum(char * p){
+    *p = (((char) blockCounter << 1) || (*p & 0x1));;
 }
 
 int getBlockNum(char * p){
-return (int) *p;
+    return (int) *p;
 }
 
 //Allocation functions
 int check_allocated(char * p){
-return (int) (*p & 0x1);
+    return (int) (*p & 0x1);
 }
 
 void setAllocated(char * p){
-*p = (*p | 0x1);
+    *p = (*p | 0x1);
 }
 void resetAllocated(char * p){
-*p = (*p & 0xFE);
+    *p = (*p & 0xFE);
 }
 
 int freeBlock(int block){return 0;}
 void blocklist(){}
 void writeHeap(int writeBlock, char writeChar, int numCopies){}
-void printHeap(int blockNum, int numBytes){}
-void printHeader(int headerNum){}
+void printHeap(int blockNum, int numBytes)
+{
+    int i = 0;
+    printf("Address\t\tBlockSize\t\tAllocated\t\t", )
+
+    for(i=0; i < HEAP_SIZE;i++ )
+    {
+        printf("Address: %c\n", )
+    }
+}
+void printHeader(int headerNum)
+{}
 
 
 
