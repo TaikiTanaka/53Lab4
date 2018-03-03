@@ -9,7 +9,7 @@
 #include <math.h>
 
 //FOR DEBUG
-#define debug_printInput 1
+#define debug_printInput 0
 #define HEAP_SIZE 127
 
 #define maxLineLength 40
@@ -66,7 +66,7 @@ void getInput(void)
 	char cmd[20] = "";
 	int num1=-1;
 	int num2=-1;
-	char charInput;
+	char charInput = ' ';
 	int i=0;
 	char *token;
 	
@@ -153,12 +153,12 @@ char * findAvailableBlock(int numBytes)
 {
 	char* iterator = heap;
 	//changed numBytes+2 to just numBytes
-	while( (iterator < heap + 125) && (isAllocated(iterator+1)  && (getBlockSize(iterator+1) < numBytes) ) )	//check 125 num during testing
+	while( (iterator < heap + 125) && ((isAllocated(iterator+1)  || (getBlockSize(iterator+1) < numBytes)) ) )	//check 125 num during testing
 	{
 		//			printf("Iterator : %p\n",iterator);
 		iterator = iterator + 2 + getBlockSize(iterator+1);
 	}
-	printf("Found available block: %p\n", iterator);
+	//printf("Found available block: %p\n", iterator);
 	return iterator;
 }
 
@@ -170,7 +170,7 @@ void addblock(char* p, int numBytes) {
 	*p = newsize; // set new length
 	if(oldsize - newsize > 2)
 	{
-		printf("Old size: %d, New Size: %d\n",oldsize,oldsize-newsize);
+		//printf("Old size: %d, New Size: %d\n",oldsize,oldsize-newsize);
 		setBlockSize((oldsize-newsize - 2),(p+newsize+3)); // writes in the size information for the next block
 		setBlockSize(numBytes, p+1);
 
@@ -321,7 +321,22 @@ void printHeap(int blockNum, int numBytes)
 void printHeader(int blockNum)
 {
 	char * p = findBlockNum(blockNum);
-	printf("%02x%02x\n",*p,*(p+1));
+	if(p!=NULL)
+	{
+		if(!isAllocated(p+1) )
+		{
+			printf("Block not allocated\n");
+		}
+		else
+		{
+			printf("%02x%02x\n",*p,*(p+1));
+		}
+	}
+	else
+	{
+		printf("Block does not exist\n");
+	}
+
 }
 
 char * findBlockNum(int blockNum)
