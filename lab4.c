@@ -9,48 +9,59 @@
 #include <math.h>
 
 //FOR DEBUG
-#define debug_printInput 0
+#define debug_printInput 1
 #define HEAP_SIZE 127
 
 #define maxLineLength 40
 void getInput(void);
 int allocate(int numBytes);
-int freeBlock(int block);
+void freeBlock(int blockNum);
 void blocklist(void);
 void writeHeap(int writeBlock, char writeChar, int numCopies);
 void printHeap(int blockNum, int numBytes);
-void printHeader(int headerNum);
-void set_block_size(int n, char * p);
-int get_block_size(char * p);
-void addblock(char * p, int len);
-int getBlockSize(char * p);
+void printHeader(int blockNum);
+
 void setBlockSize(int n, char * p);
+int getBlockSize(char * p);
+
+void addblock(char * p, int len);
+
 void setBlockNum(char * p);
 int getBlockNum(char * p);
-int check_allocated(char * p);
-void setAllocated(char * p);
-void resetAllocated(char * p);
-char * findAvailableBlock(int numBytes);
 
-static int blockCounter = 0;
+int isAllocated(char * p);
+void setAllocated(char * p);
+
+void unallocate(char * p);
+char * findAvailableBlock(int numBytes);
+char * findBlockNum(int blockNum);
+
+static int blockCounter = 1;
 static char * heap;
 
 int main(int argc, const char * argv[])
 {
-    heap = (char *) malloc(HEAP_SIZE);
-    setBlockNum(heap+1);
-    setBlockSize(HEAP_SIZE, heap);
+	int i=0;
+	heap = (char *) malloc(HEAP_SIZE);
+	char * p = heap;
+	//Clear heap to all 0
+	for(i=0;i<HEAP_SIZE;i++)
+	{
+		*(p+i)=0;
+	}
+	setBlockSize(HEAP_SIZE-2, heap+1);
 	getInput();
+	free(heap);
 	return 0;
 }
 
 void getInput(void)
 {
-    if(heap == NULL)
-    {
-        perror("malloc error");
-        exit(0);
-    }
+	if(heap == NULL)
+	{
+		perror("malloc error");
+		exit(0);
+	}
 	char input[maxLineLength]="";
 	char cmd[20] = "";
 	int num1=-1;
@@ -58,168 +69,268 @@ void getInput(void)
 	char charInput;
 	int i=0;
 	char *token;
-
-
+	
+	
 	while( (strcmp(cmd, "quit")) )
 	{
-	    printf("> ");
+		printf("> ");
 		i=0;
 		if( fgets (input, maxLineLength, stdin)!=NULL )
 		{
 			token=strtok(input, " \n");
 			strcpy(cmd, token);
-
+			
 			token = strtok(NULL, " \n");
 			while(token!=NULL)
 			{
-
+				//printf("Token: %s\n",token);
 				if(i==0)
 				{
 					num1 = atoi(token);
 				}
 				else if(i==1)
 				{
-					num2 = atoi(token);
+					if(!strcmp(cmd, "writeheap"))
+					{
+						charInput = *token;
+					}
+					else
+					{
+						num2 = atoi(token);
+					}
 				}
 				else //if (i==2)
-                {
-                    charInput = *token;
-                }
+				{
+					num2 = atoi(token);
+				}
 				i++;
 				token = strtok(NULL, " \n");
 			}
 		}
-
-		printf("Command: %s\n Arg1: %d\n Arg2: %d\n Arg3: %c\n", cmd, num1, num2,charInput);
-
+		
+		//printf("Command: %s\n Num1: %d\n CharInput: %c\n Num2: %d\n", cmd, num1, charInput,num2);
+		
 		//GOTO CMD FUNCTIONS
 		if(!strcmp(cmd, "allocate"))
 		{
-            allocate(0);
+			allocate(num1);
 		}
 		else if(!strcmp(cmd, "free"))
 		{
-		    freeBlock(0);
+			freeBlock(num1);
 		}
 		else if(!strcmp(cmd, "blocklist"))
 		{
-		    blocklist();
+			blocklist();
 		}
 		else if(!strcmp(cmd, "writeheap"))
 		{
-		    writeHeap(0,'a',0);
+			writeHeap(num1,charInput,num2);
 		}
 		else if(!strcmp(cmd, "printheap"))
 		{
-		    printHeap(0,0);
+			printHeap(num1,num2);
 		}
 		else if(!strcmp(cmd, "printheader"))
 		{
-		    printHeader(0);
+			printHeader(num1);
 		}
 	}
-	free(heap);
 }
 
 int allocate(int numBytes)
 {
-    //First look for the first available block with enough space
-    char * p = findAvailableBlock(numBytes);
-    //p now points to the first block of
-    //Now allocate the memory
-    addblock(p,numBytes);
-    return 0;
+	//find first free block
+	//First look for the first available block with enough space
+	char * p = findAvailableBlock(numBytes);
+	//p now points to the first block of
+	//Now allocate the memory
+	addblock(p,numBytes);
+	return 0;
 }
 
 char * findAvailableBlock(int numBytes)
 {
-    char* iterator = heap;
-    while(((iterator < heap + 127) && check_allocated(iterator + 1)) || getBlockSize(iterator) < numBytes + 2)
-    {
-        iterator = iterator + *iterator;
-    }
-    return iterator;
+	char* iterator = heap;
+	//changed numBytes+2 to just numBytes
+	while( (iterator < heap + 125) && (isAllocated(iterator+1)  && (getBlockSize(iterator+1) < numBytes) ) )	//check 125 num during testing
+	{
+		//			printf("Iterator : %p\n",iterator);
+		iterator = iterator + 2 + getBlockSize(iterator+1);
+	}
+	printf("Found available block: %p\n", iterator);
+	return iterator;
 }
 
 void addblock(char* p, int numBytes) {
-    //Need to implement the splitting logic+++
-    int newsize = numBytes; // the size of the allocated block
-    int oldsize = *p; // block size stored in p
-    *p = newsize; // set new length
-    if(oldsize - newsize > 2)
-        *(p+newsize+2) = oldsize - newsize; // writes in the size information for the next block
-    setBlockNum(p+1);
+	//Need to implement the splitting logic+++
+	//	printf("AddBlock: %p\n",p);
+	int newsize = numBytes; // the size of the allocated block
+	int oldsize = getBlockSize(p+1); // block size stored in p
+	*p = newsize; // set new length
+	if(oldsize - newsize > 2)
+	{
+		printf("Old size: %d, New Size: %d\n",oldsize,oldsize-newsize);
+		setBlockSize((oldsize-newsize - 2),(p+newsize+3)); // writes in the size information for the next block
+		//*(p+newsize+2) = oldsize - newsize;
+	}
+	setBlockNum(p);
+	setBlockSize(numBytes, p+1);
+	setAllocated(p+1);
 }
 
 //Block helper functions
-int getBlockSize(char * p){
-    return (int) ((unsigned char)*p >> 1);
-}
-void setBlockSize(int n, char * p){
-    *p = n;
-}
-
-void setBlockNum(char * p){
-    *p = (((char) blockCounter << 1) || (*p & 0x1));;
+int getBlockSize(char * p)
+{
+	//	printf("GetBlock Size: %d\n",(int) ((unsigned char)*p >> 1));
+	return (int) ((unsigned char)*p >> 1);
 }
 
-int getBlockNum(char * p){
-    return (int) *p;
+void setBlockNum(char * p)
+{
+	*p = (char)(blockCounter);
+	printf("%d\n",blockCounter);
+	blockCounter++;
+}
+
+void setBlockSize(int numBytes, char * p)
+{
+	*p = (numBytes << 1);
+}
+
+int getBlockNum(char * p)
+{
+	return (int) *p;
 }
 
 //Allocation functions
-int check_allocated(char * p){
-    return (int) (*p & 0x1);
+int isAllocated(char * p)
+{
+	return (int) (*p & 0x1);
 }
 
-void setAllocated(char * p){
-    *p = (*p | 0x1);
+void setAllocated(char * p)
+{
+	*p = (*p | 0x1);
 }
-void resetAllocated(char * p){
-    *p = (*p & 0xFE);
+void unallocate(char * p)
+{
+	*p = (*p & 0xFE);
 }
 
-int freeBlock(int block){return 0;}
-void blocklist(){}
-void writeHeap(int writeBlock, char writeChar, int numCopies){}
+void freeBlock(int blockNum)
+{
+	char * p = heap;
+	p=findBlockNum(blockNum);
+	unallocate(p+1);
+}
+void blocklist()
+{
+	char* iterator = heap;
+	printf("Size\t\tAllocated\t\tStart\t\tEnd\n");
+	while(iterator < heap + 125)	//check 125 num during testing
+	{
+		//if((isAllocated(iterator+1)))
+		//{
+			printf("%d\t\t\t%s\t\t\t\t%ld\t\t\t%ld\n",getBlockSize(iterator+1)+2,(isAllocated(iterator+1)?"yes":"no") ,labs(heap-iterator), labs(heap-iterator)+getBlockSize(iterator+1)+1);
+		//}
+		iterator = iterator + 2 + getBlockSize(iterator+1);
+	}
+}
+void writeHeap(int blockNum, char writeChar, int numCopies)
+{
+	int i = 0;
+	char * p = findBlockNum(blockNum);
+	//printf("Write heap address: %p", p);
+	if(p==NULL)
+	{
+		printf("Can't find blockNum\n");
+	}
+	else
+	{
+		if(numCopies>getBlockSize(p+1))
+		{
+			printf("Write too big\n");
+		}
+		else
+		{
+			p=p+2;		//first payload byte;
+			for(i=0;i<numCopies;i++)
+			{
+				*p=writeChar;
+				p++;
+			}
+		}
+	}
+}
+
 void printHeap(int blockNum, int numBytes)
 {
-    int i = 0;
-    printf("Address\t\tBlockSize\t\tAllocated\t\t", )
+	
+	//check how big block is of blockNum.
+	//if numBytes > size of block payload, don't print anything
+	
+	//printf("Address\t\tBlockSize\t\tAllocated\t\t");
+	char *p;
+	int i;
+	if(debug_printInput)
+	{
+		p = heap;
+		i = 0;
+		printf("Address\t\t\tValue\n");
+		
+		for(i=0; i < HEAP_SIZE;i++ )
+		{
+			printf("%p\t\t%d\n", p+i,(int)((unsigned char)*(p+i)));
+		}
+	}
+	else
+	{
+		i = 0;
+		p = findBlockNum(blockNum);
+		//printf("Write heap address: %p", p);
+		if(p==NULL)
+		{
+			printf("Can't find blockNum\n");
+		}
+		else
+		{
+			if(numBytes>getBlockSize(p+1))
+			{
+				numBytes=getBlockSize(p+1);
+			}
+			else
+			{
+				p=p+2;		//first payload byte;
+				for(i=0;i<numBytes;i++)
+				{
+					printf("%c",*(p+i));
+				}
+				printf("\n");
 
-    for(i=0; i < HEAP_SIZE;i++ )
-    {
-        printf("Address: %c\n", )
-    }
+			}
+		}
+	}
 }
-void printHeader(int headerNum)
-{}
+void printHeader(int blockNum)
+{
+	char * p = findBlockNum(blockNum);
+	printf("%02x%02x\n",*p,*(p+1));
+}
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+char * findBlockNum(int blockNum)
+{
+	char * iterator=heap;
+	while((iterator < heap + 125))	//check 125 num during testing
+	{
+		if(getBlockNum(iterator)==blockNum)
+		{
+			return iterator;
+		}
+		iterator = iterator + 2 + getBlockSize(iterator+1);
+	}
+	return NULL;
+}
 
 
 
