@@ -173,7 +173,7 @@ void addblock(char* p, int numBytes) {
 		//printf("Old size: %d, New Size: %d\n",oldsize,oldsize-newsize);
 		setBlockSize((oldsize-newsize - 2),(p+newsize+3)); // writes in the size information for the next block
 		setBlockSize(numBytes, p+1);
-
+		
 		//*(p+newsize+2) = oldsize - newsize;
 	}
 	else
@@ -238,7 +238,7 @@ void blocklist()
 	{
 		//if((isAllocated(iterator+1)))
 		//{
-			printf("%d\t\t\t%s\t\t\t\t%ld\t\t\t%ld\n",getBlockSize(iterator+1)+2,(isAllocated(iterator+1)?"yes":"no") ,labs(heap-iterator), labs(heap-iterator)+getBlockSize(iterator+1)+1);
+		printf("%d\t\t\t%s\t\t\t\t%ld\t\t\t%ld\n",getBlockSize(iterator+1)+2,(isAllocated(iterator+1)?"yes":"no") ,labs(heap-iterator), labs(heap-iterator)+getBlockSize(iterator+1)+1);
 		//}
 		iterator = iterator + 2 + getBlockSize(iterator+1);
 	}
@@ -313,7 +313,7 @@ void printHeap(int blockNum, int numBytes)
 					printf("%c",*(p+i));
 				}
 				printf("\n");
-
+				
 			}
 		}
 	}
@@ -329,14 +329,14 @@ void printHeader(int blockNum)
 		}
 		else
 		{
-			printf("%02x%02x\n",*p,*(p+1));
+			printf("%02x%02x\n",*p,*(p+1)+4);
 		}
 	}
 	else
 	{
 		printf("Block does not exist\n");
 	}
-
+	
 }
 
 char * findBlockNum(int blockNum)
