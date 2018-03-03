@@ -172,10 +172,16 @@ void addblock(char* p, int numBytes) {
 	{
 		printf("Old size: %d, New Size: %d\n",oldsize,oldsize-newsize);
 		setBlockSize((oldsize-newsize - 2),(p+newsize+3)); // writes in the size information for the next block
+		setBlockSize(numBytes, p+1);
+
 		//*(p+newsize+2) = oldsize - newsize;
 	}
+	else
+	{
+		setBlockSize(oldsize,(p+1)); // writes in the size information for the next block
+		//setBlockSize(numBytes, p+1);
+	}
 	setBlockNum(p);
-	setBlockSize(numBytes, p+1);
 	setAllocated(p+1);
 }
 
