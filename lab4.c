@@ -69,8 +69,8 @@ void getInput(void)
 	char charInput = ' ';
 	int i=0;
 	char *token;
-	
-	
+
+
 	while( (strcmp(cmd, "quit")) )
 	{
 		printf("> ");
@@ -79,7 +79,7 @@ void getInput(void)
 		{
 			token=strtok(input, " \n");
 			strcpy(cmd, token);
-			
+
 			token = strtok(NULL, " \n");
 			while(token!=NULL)
 			{
@@ -107,9 +107,9 @@ void getInput(void)
 				token = strtok(NULL, " \n");
 			}
 		}
-		
+
 		//printf("Command: %s\n Num1: %d\n CharInput: %c\n Num2: %d\n", cmd, num1, charInput,num2);
-		
+
 		//GOTO CMD FUNCTIONS
 		if(!strcmp(cmd, "allocate"))
 		{
@@ -173,7 +173,7 @@ void addblock(char* p, int numBytes) {
 		//printf("Old size: %d, New Size: %d\n",oldsize,oldsize-newsize);
 		setBlockSize((oldsize-newsize - 2),(p+newsize+3)); // writes in the size information for the next block
 		setBlockSize(numBytes, p+1);
-		
+
 		//*(p+newsize+2) = oldsize - newsize;
 	}
 	else
@@ -233,12 +233,12 @@ void freeBlock(int blockNum)
 void blocklist()
 {
 	char* iterator = heap;
-	printf("Size\t\tAllocated\t\tStart\t\tEnd\n");
+	printf("Size\t\tAllocated\tStart\t\tEnd\n");
 	while(iterator < heap + 125)	//check 125 num during testing
 	{
 		//if((isAllocated(iterator+1)))
 		//{
-		printf("%d\t\t\t%s\t\t\t\t%ld\t\t\t%ld\n",getBlockSize(iterator+1)+2,(isAllocated(iterator+1)?"yes":"no") ,labs(heap-iterator), labs(heap-iterator)+getBlockSize(iterator+1)+1);
+		printf("%d\t\t%s\t\t%ld\t\t%ld\n",getBlockSize(iterator+1)+2,(isAllocated(iterator+1)?"yes":"no") ,labs(heap-iterator), labs(heap-iterator)+getBlockSize(iterator+1)+1);
 		//}
 		iterator = iterator + 2 + getBlockSize(iterator+1);
 	}
@@ -272,10 +272,6 @@ void writeHeap(int blockNum, char writeChar, int numCopies)
 
 void printHeap(int blockNum, int numBytes)
 {
-	
-	//check how big block is of blockNum.
-	//if numBytes > size of block payload, don't print anything
-	
 	//printf("Address\t\tBlockSize\t\tAllocated\t\t");
 	char *p;
 	int i;
@@ -284,7 +280,7 @@ void printHeap(int blockNum, int numBytes)
 		p = heap;
 		i = 0;
 		printf("Address\t\t\tValue\n");
-		
+
 		for(i=0; i < HEAP_SIZE;i++ )
 		{
 			printf("%p\t\t%d\n", p+i,(int)((unsigned char)*(p+i)));
@@ -305,16 +301,12 @@ void printHeap(int blockNum, int numBytes)
 			{
 				numBytes=getBlockSize(p+1);
 			}
-			else
-			{
-				p=p+2;		//first payload byte;
-				for(i=0;i<numBytes;i++)
-				{
-					printf("%c",*(p+i));
-				}
-				printf("\n");
-				
-			}
+            p=p+2;		//first payload byte;
+            for(i=0;i<numBytes;i++)
+            {
+                printf("%c",*(p+i));
+            }
+            printf("\n");
 		}
 	}
 }
@@ -336,7 +328,7 @@ void printHeader(int blockNum)
 	{
 		printf("Block does not exist\n");
 	}
-	
+
 }
 
 char * findBlockNum(int blockNum)
