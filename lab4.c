@@ -14,25 +14,27 @@
 
 #define maxLineLength 40
 void getInput(void);
-int allocate(int numBytes);
+
+void allocate(int numBytes);
 void freeBlock(int blockNum);
+void addblock(char * p, int len);
+
 void blocklist(void);
 void writeHeap(int writeBlock, char writeChar, int numCopies);
+
 void printHeap(int blockNum, int numBytes);
 void printHeader(int blockNum);
 
 void setBlockSize(int n, char * p);
 int getBlockSize(char * p);
 
-void addblock(char * p, int len);
-
 void setBlockNum(char * p);
 int getBlockNum(char * p);
 
 int isAllocated(char * p);
 void setAllocated(char * p);
-
 void unallocate(char * p);
+
 char * findAvailableBlock(int numBytes);
 char * findBlockNum(int blockNum);
 
@@ -70,7 +72,6 @@ void getInput(void)
 	int i=0;
 	char *token;
 
-
 	while( (strcmp(cmd, "quit")) )
 	{
 		printf("> ");
@@ -83,7 +84,6 @@ void getInput(void)
 			token = strtok(NULL, " \n");
 			while(token!=NULL)
 			{
-				//printf("Token: %s\n",token);
 				if(i==0)
 				{
 					num1 = atoi(token);
@@ -138,15 +138,10 @@ void getInput(void)
 	}
 }
 
-int allocate(int numBytes)
+void allocate(int numBytes)
 {
-	//find first free block
-	//First look for the first available block with enough space
 	char * p = findAvailableBlock(numBytes);
-	//p now points to the first block of
-	//Now allocate the memory
 	addblock(p,numBytes);
-	return 0;
 }
 
 char * findAvailableBlock(int numBytes)
@@ -155,40 +150,40 @@ char * findAvailableBlock(int numBytes)
 	//changed numBytes+2 to just numBytes
 	while( (iterator < heap + 125) && ((isAllocated(iterator+1)  || (getBlockSize(iterator+1) < numBytes)) ) )	//check 125 num during testing
 	{
-		//			printf("Iterator : %p\n",iterator);
 		iterator = iterator + 2 + getBlockSize(iterator+1);
 	}
 	//printf("Found available block: %p\n", iterator);
+	if((iterator-(heap+126)>0))
+	{
+		iterator = NULL;
+	}
 	return iterator;
 }
 
 void addblock(char* p, int numBytes) {
-	//Need to implement the splitting logic+++
-	//	printf("AddBlock: %p\n",p);
-	int newsize = numBytes; // the size of the allocated block
-	int oldsize = getBlockSize(p+1); // block size stored in p
-	*p = newsize; // set new length
-	if(oldsize - newsize > 2)
+	if(p!=NULL)
 	{
-		//printf("Old size: %d, New Size: %d\n",oldsize,oldsize-newsize);
-		setBlockSize((oldsize-newsize - 2),(p+newsize+3)); // writes in the size information for the next block
-		setBlockSize(numBytes, p+1);
-
-		//*(p+newsize+2) = oldsize - newsize;
+		int newsize = numBytes; // the size of the allocated block
+		int oldsize = getBlockSize(p+1); // block size stored in p
+		*p = newsize; // set new length
+		if(oldsize - newsize > 2)
+		{
+			//printf("Old size: %d, New Size: %d\n",oldsize,oldsize-newsize);
+			setBlockSize((oldsize-newsize - 2),(p+newsize+3)); // writes in the size information for the next block
+			setBlockSize(numBytes, p+1);
+		}
+		else
+		{
+			setBlockSize(oldsize,(p+1)); // writes in the size information for the next block
+		}
+		setBlockNum(p);
+		setAllocated(p+1);
 	}
-	else
-	{
-		setBlockSize(oldsize,(p+1)); // writes in the size information for the next block
-		//setBlockSize(numBytes, p+1);
-	}
-	setBlockNum(p);
-	setAllocated(p+1);
 }
 
 //Block helper functions
 int getBlockSize(char * p)
 {
-	//	printf("GetBlock Size: %d\n",(int) ((unsigned char)*p >> 1));
 	return (int) ((unsigned char)*p >> 1);
 }
 
@@ -247,7 +242,6 @@ void writeHeap(int blockNum, char writeChar, int numCopies)
 {
 	int i = 0;
 	char * p = findBlockNum(blockNum);
-	//printf("Write heap address: %p", p);
 	if(p==NULL)
 	{
 		printf("Can't find blockNum\n");
@@ -290,7 +284,6 @@ void printHeap(int blockNum, int numBytes)
 	{
 		i = 0;
 		p = findBlockNum(blockNum);
-		//printf("Write heap address: %p", p);
 		if(p==NULL)
 		{
 			printf("Can't find blockNum\n");
@@ -321,7 +314,7 @@ void printHeader(int blockNum)
 		}
 		else
 		{
-			printf("%02x%02x\n",*p,*(p+1)+4);
+			printf("%02X%02X\n",*p,(*(p+1)+4 & 0xFF));
 		}
 	}
 	else
